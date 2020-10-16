@@ -17,7 +17,7 @@ export PATH=$(echo "$PATH" | sed s,${mydir}:,,g)
 
 if test -L "$0"
 then
-    mydir=$(readlink -f "$0")
+    mydir=$(dirname "$(readlink -f "$0")")
 fi
 
 exe_name=$(basename $0)
