@@ -19,6 +19,11 @@ mydir=$(dirname "$0")
 # invocations of git call "real" git.
 export PATH=$(echo "$PATH" | sed s,${mydir}:,,g)
 
+if [ "$(git config obsolescence.enabled)" != "true" ]
+then
+    exec $(basename "$0") ${1+"$@"}
+fi
+
 # Sometimes it is on the $PATH in multiple places.
 [ "$OBSOLESCENCE_POC" = 1 ] && exec $(basename "$0") ${1+"$@"}
 
