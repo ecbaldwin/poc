@@ -45,7 +45,12 @@ case $subcommand in
 rebase|commit|push)
     newHooksPath=$(mktemp -d -t git.hooksPath.XXXXXX)
 
-    oldLocalHooksPath=$(git config --worktree core.hooksPath)
+    if [ "$(git config extensions.worktreeConfig)" != "true" ]
+    then
+        echo >&2 "Please enable worktreeConfig with \`git config extensions.worktreeConfig true\`"
+        exit 1
+    fi
+    oldLocalHooksPath=$(git config core.hooksPath)
     if [ $? -eq 0 ]
     then
         cleanup() {
