@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+set -ex
+
+. "$(dirname "$0")/common.sh"
+
+########################################################################
+# Setup
+#
+########################################################################
+
+touch base && git add base
+git commit -m "Base commit"
+base=$(git rev-parse @)
+
+########################################################################
+# Create a change, amend it in a different workspace and then amend it
+# again in the original workspace without pulling the other changes.
+#
+########################################################################
+git switch -c topic
+for letter in a b c d
+do
+    touch $letter && git add $letter
+    git commit -m "$letter commit"
+done
+
+git checkout -b upstream/topic
+# Edit the last four commits
+ed_it git rebase -i --keep-base $base <<ED
+1,4s/^pick/edit/
+%p
+w
+ED
+
+for letter in a b c d
+do
+    touch $letter.upstream && git add $letter.upstream
+    no_edit git rebase --continue
+done
+
+declare -A upstream
+upstream[d]=$(git rev-parse @)
+upstream[c]=$(git rev-parse @~)
+upstream[b]=$(git rev-parse @~2)
+upstream[a]=$(git rev-parse @~3)
+
+git switch topic
+
+# Edit the last four commits
+ed_it git rebase -i --keep-base $base <<ED
+1,4s/^pick/edit/
+%p
+w
+ED
+
+for letter in a b c d
+do
+    touch $letter.downstream && git add $letter.downstream
+    no_edit git rebase --continue
+done
+
+declare -A downstream
+downstream[d]=$(git rev-parse @)
+downstream[c]=$(git rev-parse @~)
+downstream[b]=$(git rev-parse @~2)
+downstream[a]=$(git rev-parse @~3)
+
+git rebase upstream/topic
+
+assert_revs_equal "a predecessor 1" ${upstream[a]} $(list_predecessors @~3 | head -n 1)
+assert_revs_equal "b predecessor 1" ${upstream[b]} $(list_predecessors @~2 | head -n 1)
+assert_revs_equal "c predecessor 1" ${upstream[c]} $(list_predecessors @~  | head -n 1)
+assert_revs_equal "d predecessor 1" ${upstream[d]} $(list_predecessors @   | head -n 1)
+
+assert_revs_equal "a predecessor 2" ${downstream[a]} $(list_predecessors @~3 | tail -n 1)
+assert_revs_equal "b predecessor 2" ${downstream[b]} $(list_predecessors @~2 | tail -n 1)
+assert_revs_equal "c predecessor 2" ${downstream[c]} $(list_predecessors @~  | tail -n 1)
+assert_revs_equal "d predecessor 2" ${downstream[d]} $(list_predecessors @   | tail -n 1)
