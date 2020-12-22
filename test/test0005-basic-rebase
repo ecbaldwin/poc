@@ -3,7 +3,7 @@
 . "$(dirname "$0")/common.sh"
 
 ########################################################################
-# Test rebase one branch to another where all changes are divergent
+# Test rebase one branch to another with no common changes
 #
 ########################################################################
 
