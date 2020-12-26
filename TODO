@@ -1,0 +1,28 @@
+# Open Questions
+1. Flesh out the rebase algorithm
+  - Figure out which commits are shared between the two branches' histories
+    - These are commits that are found from the divergent changes in each branch
+2. Collapse chains of rewrites when they haven't been shared with an upstream
+  - Do this on push? Ask first?
+3. Figure out how to mark branches as stable.
+   - When there are no upstream changes after excluding stable ones, just exec
+     normal git.
+   - Any time there are no commits in common, exec normal git.
+4. Should --force be required if some upstream changes are not present in what is being pushed?
+   - For the gerrit workflow, I'd say no since the missing changes aren't being removed in any way.
+   - For the github workflow, the changes may go missing.
+   - Make sure that merged changes are taken into account.
+
+# Open Questions, things I could work on.
+- Need a way to print the log for a change
+- Need a way to diff commits from the same change
+- Magic refs (e.g. refs/for/branch)
+
+- Need a way to push/pull a change in case something was missed
+  - Obsolete commits from a change can be pushed easily manually.
+  - To fetch, you need to know the change id for a commit.
+    - This can be done by running `git --ls-remote` and greping for the
+      obsolete commit in the commit you have. Then, fetch all of the cheads
+      from the same change id.
+- Need a strategy to clean up old changes from the local repository (all the
+  new heads)
